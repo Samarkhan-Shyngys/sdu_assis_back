@@ -1,5 +1,6 @@
 package com.sdu.edu.controllers;
 
+import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -76,8 +77,8 @@ public class AuthController {
 				.collect(Collectors.toList());
 		
 		return ResponseEntity.ok(new JwtResponse(jwt,
-				userDetails.getId(), 
-				userDetails.getUsername(), 
+				userDetails.getId(),
+				userDetails.getUsername(),
 				userDetails.getEmail(), 
 				roles));
 	}
@@ -85,50 +86,68 @@ public class AuthController {
 	@PostMapping("/signup")
 	public ResponseEntity<?> registerUser(@RequestBody SignupRequest signupRequest) throws Exception {
 
+		if(!signupRequest.getEmail().split("@")[1].equals("stu.sdu.edu.kz") || signupRequest.getEmail().split("@")[0].length()!=9){
+			return ResponseEntity
+					.badRequest()
+					.body(new MessageResponse("Error: Email is not SDU"));
+		}
+		int sduId = Integer.parseInt(signupRequest.getEmail().split("@")[0].substring(0,2));
+		System.out.println(sduId);
+		int year = Calendar.getInstance().get(Calendar.MONTH)>=9 ? LocalDate.now().getYear()+1-2000:LocalDate.now().getYear()-2000;
+
+		if(sduId>=year || year-sduId>4){
+			return ResponseEntity
+					.badRequest()
+					.body(new MessageResponse("Error: SDU email is not active"));
+		}
 		
-		if (userRespository.existsByEmail(signupRequest.getEmail())) {
+		if (userRespository.existsByEmail(signupRequest.getEmail()) && userRespository.findByEmail(signupRequest.getEmail()).getActivate()==1) {
 			return ResponseEntity
 					.badRequest()
 					.body(new MessageResponse("Error: Email is exist"));
 		}
-		
-		User user = new User(signupRequest.getEmail(), signupRequest.getEmail(),
-				passwordEncoder.encode(signupRequest.getPassword()));
-		
-		Set<String> reqRoles = signupRequest.getRoles();
-		Set<Role> roles = new HashSet<>();
-		
-		if (reqRoles == null) {
-			Role userRole = roleRepository
-					.findByName(ERole.ROLE_ASSISTENT)
-					.orElseThrow(() -> new RuntimeException("Error, Role USER is not found"));
-			roles.add(userRole);
-		} else {
-			reqRoles.forEach(r -> {
-				switch (r) {
-				case "admin":
-					Role adminRole = roleRepository
-						.findByName(ERole.ROLE_ADMIN)
-						.orElseThrow(() -> new RuntimeException("Error, Role ADMIN is not found"));
-					roles.add(adminRole);
-					
-					break;
-				case "mod":
-					Role modRole = roleRepository
-						.findByName(ERole.ROLE_STUDENT)
-						.orElseThrow(() -> new RuntimeException("Error, Role MODERATOR is not found"));
-					roles.add(modRole);
-					
-					break;
-
-				default:
-					Role userRole = roleRepository
-						.findByName(ERole.ROLE_ASSISTENT)
-						.orElseThrow(() -> new RuntimeException("Error, Role USER is not found"));
-					roles.add(userRole);
-				}
-			});
+		User user;
+		if(userRespository.existsByEmail(signupRequest.getEmail())){
+				user = userRespository.findByEmail(signupRequest.getEmail());
+		}else{
+			user = new User(signupRequest.getEmail(), signupRequest.getEmail(),
+					passwordEncoder.encode(signupRequest.getPassword()));
 		}
+
+
+		Set<Role> roles = new HashSet<>();
+		Role userRole = roleRepository
+				.findByName(ERole.ROLE_STUDENT)
+				.orElseThrow(() -> new RuntimeException("Error, Role Student is not found"));
+		roles.add(userRole);
+//		if (reqRoles == null) {
+
+//		} else {
+//			reqRoles.forEach(r -> {
+//				switch (r) {
+//				case "admin":
+//					Role adminRole = roleRepository
+//						.findByName(ERole.ROLE_ADMIN)
+//						.orElseThrow(() -> new RuntimeException("Error, Role ADMIN is not found"));
+//					roles.add(adminRole);
+//
+//					break;
+//				case "assistant":
+//					Role modRole = roleRepository
+//						.findByName(ERole.ROLE_ASSISTENT)
+//						.orElseThrow(() -> new RuntimeException("Error, Role ASSISTANT is not found"));
+//					roles.add(modRole);
+//
+//					break;
+//
+//				default:
+//					Role userRole = roleRepository
+//						.findByName(ERole.ROLE_ASSISTENT)
+//						.orElseThrow(() -> new RuntimeException("Error, Role USER is not found"));
+//					roles.add(userRole);
+//				}
+//			});
+//		}
 		Random rand = new Random();
 		String code = String.valueOf(rand.nextInt(9999));
 		user.setRoles(roles);
@@ -143,13 +162,20 @@ public class AuthController {
 	@PostMapping("/activateCode")
 	public ResponseEntity<?> activateUser(@RequestBody ActivateDto activateCodeDto) {
 		System.out.println(activateCodeDto);
-		String email = userService.activateUser(activateCodeDto);
-		if(email==null){
+		User user  = userService.activateUser(activateCodeDto);
+		if(user==null){
 			return ResponseEntity
 					.badRequest()
 					.body(new MessageResponse("Error: invalid code"));
 		}
-		return ResponseEntity.ok(new MessageResponse("user created"));
 
+		List<Role> list = user.getRoles().stream().toList();
+		List<String> roles = new ArrayList<>();
+		roles.add(list.get(0).getName().name());
+
+
+		return ResponseEntity.ok(new UserDto(user.getId(), user.getEmail(), user.getUsername(), user.getRoles().stream().toList().get(0).getName().name()));
 	}
+
+
 }
