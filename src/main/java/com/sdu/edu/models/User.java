@@ -5,16 +5,7 @@ import lombok.Data;
 import java.util.HashSet;
 import java.util.Set;
 
-import javax.persistence.Entity;
-import javax.persistence.FetchType;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.JoinTable;
-import javax.persistence.ManyToMany;
-import javax.persistence.Table;
-import javax.persistence.UniqueConstraint;
+import javax.persistence.*;
 
 @Entity
 @Table(name = "users",
@@ -34,6 +25,8 @@ public class User {
 	private String password;
 	private String activateCode;
 	private int activate;
+	@Column(columnDefinition = "boolean default false")
+	private boolean deleted;
 
 	@ManyToMany(fetch = FetchType.LAZY)
 	@JoinTable(name = "user_roles",

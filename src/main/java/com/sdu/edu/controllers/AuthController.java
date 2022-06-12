@@ -59,7 +59,6 @@ public class AuthController {
 
 		UserDetailsImpl userDetails = (UserDetailsImpl) userDetailsService.loadUserByUsername(loginRequest.getUsername());
 		if(userDetails==null){
-			System.out.println("sssss");
 			return new ResponseEntity<>(new MessageResponse("Не верные иин или пароль"), HttpStatus.BAD_REQUEST);
 		}
 
@@ -75,12 +74,12 @@ public class AuthController {
 		List<String> roles = userDetails.getAuthorities().stream()
 				.map(item -> item.getAuthority())
 				.collect(Collectors.toList());
-		
-		return ResponseEntity.ok(new JwtResponse(jwt,
-				userDetails.getId(),
-				userDetails.getUsername(),
-				userDetails.getEmail(), 
-				roles));
+
+		return ResponseEntity.ok(new UserDto(
+								userDetails.getId(),
+								userDetails.getEmail(),
+								userDetails.getUsername(),
+								roles.get(0).toString()));
 	}
 	
 	@PostMapping("/signup")

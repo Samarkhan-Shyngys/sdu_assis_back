@@ -29,6 +29,9 @@ public class Library {
         @Column(name = "image_path")
         private String imagePath;
 
+        @Column(name = "user_id")
+        private Long userId;
+
         @Column(name = "upload_date")
         private Timestamp uploadDate = new Timestamp(System.currentTimeMillis());
 }

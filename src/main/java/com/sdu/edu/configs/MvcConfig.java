@@ -11,14 +11,14 @@ import java.util.concurrent.TimeUnit;
 @Configuration
 public class MvcConfig implements WebMvcConfigurer {
 
-    @Value("/home/shyngys/device/")
+    @Value("C://Users/Shyngys/Desktop/")
     private String uploadPath;
 
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
         registry.addResourceHandler("/file/**")
-                .addResourceLocations("file:"+uploadPath+"library/").setCacheControl(CacheControl.maxAge(30, TimeUnit.DAYS));
-        registry.addResourceHandler("/file/**")
-                .addResourceLocations("file:"+uploadPath+"img/").setCacheControl(CacheControl.maxAge(30, TimeUnit.DAYS));
+                .addResourceLocations("file:"+uploadPath+"libs/").setCacheControl(CacheControl.maxAge(30, TimeUnit.DAYS));
+        registry.addResourceHandler("/course/**")
+                .addResourceLocations("file:"+uploadPath+"course/").setCacheControl(CacheControl.maxAge(30, TimeUnit.DAYS));
     }
 }

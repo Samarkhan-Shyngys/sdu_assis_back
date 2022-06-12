@@ -25,6 +25,6 @@ public class Assistant {
     private Long userId;
     private String language;
     private String aboutYou;
-    private String job;
-    private String certificate;
+    private boolean access;
+    private String video;
 }

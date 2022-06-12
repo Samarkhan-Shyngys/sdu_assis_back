@@ -26,6 +26,12 @@ public class CourseStudent {
     @Column(name = "course_info", columnDefinition="TEXT")
     private String courseInfo;
 
+    @Column(name = "course_id")
+    private Long courseId;
+
+    @Column(name = "format")
+    private Integer format;
+
     @Column(name = "student_id")
     private Integer studentId;
 }

@@ -7,4 +7,5 @@ import java.util.List;
 
 public interface LibraryRepository extends JpaRepository<Library, Long> {
     List<Library> findAll();
+    List<Library> findAllByUserId(Long id);
 }

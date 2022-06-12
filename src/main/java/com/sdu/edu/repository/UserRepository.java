@@ -1,5 +1,6 @@
 package com.sdu.edu.repository;
 
+import java.util.List;
 import java.util.Optional;
 
 import com.sdu.edu.models.User;
@@ -13,4 +14,5 @@ public interface UserRepository extends JpaRepository<User, Long>{
 	Boolean existsByEmail(String email);
 	User findByEmail(String email);
 	User findByActivateCode(String code);
+	List<User> findAll();
 }

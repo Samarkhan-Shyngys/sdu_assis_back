@@ -25,8 +25,15 @@ public class CourseTeacher {
     @Column(name = "course_info", columnDefinition="TEXT")
     private String courseInfo;
 
+    @Column(name = "format")
+    private Integer format;
+
     @Column(name = "assistent_id")
-    private Integer assistentId;
+    private Long assistentId;
+
+    private String photoPath;
+    private Integer point;
+    private Integer rating;
 
 
 

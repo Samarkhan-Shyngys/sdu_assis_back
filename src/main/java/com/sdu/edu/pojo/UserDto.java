@@ -6,7 +6,7 @@ import lombok.Data;
 public class UserDto {
     private Long id;
     private String email;
-    private String role;
+    private String roles;
     private String username;
 
     public UserDto() {
@@ -15,7 +15,7 @@ public class UserDto {
     public UserDto(Long id, String email,String username, String role) {
         this.id = id;
         this.email = email;
-        this.role = role;
+        this.roles = role;
         this.username = username;
     }
 }
