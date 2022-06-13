@@ -154,28 +154,65 @@ public class AssistantService {
         }
 
     }
+    public void editCourse(Long id, Map<String, Object> map, MultipartFile file) throws IOException {
+        if(map.get("courseName")!=null && !map.get("courseName").toString().equals("")){
+            if(teacherRepository.existsByCourseName((map.get("courseName").toString()))){
+                Random rand = new Random();
+                CourseTeacher course = teacherRepository.getOne(id);
+//                if(teacherRepository.existsByAssistentId(id)){
+//                    course = teacherRepository.findByAssistentId(id);
+//                }
+                course.setCourseName(map.get("courseName").toString());
+                course.setCourseInfo(map.get("about").toString());
+                course.setCourseTime(map.get("dates").toString());
+                if (map.get("format").toString().equals("onn")) {
+                    course.setFormat(0);
+                }
+                if (map.get("format").toString().equals("off")) {
+                    course.setFormat(1);
+                }
+
+
+                if(file != null) {
+                    File courseIm = new File(coursePath);
+                    if (!courseIm.exists()) {
+                        courseIm.mkdir();
+                    }
+                    int name = rand.nextInt(10000);
+                    file.transferTo(new File(courseIm + "/" + name + "." + file.getContentType().split("/")[1]));
+                    course.setPhotoPath( name + "." + file.getContentType().split("/")[1]);
+                }
+                teacherRepository.save(course);
+            }
+        }
+    }
 
     public void addCourse(Long id, Map<String, Object> map, MultipartFile file) throws IOException {
-        Random rand = new Random();
-        CourseTeacher course = new CourseTeacher();
-        if(teacherRepository.existsByAssistentId(id)){
-            course = teacherRepository.findByAssistentId(id);
-        }
-        course.setCourseName(map.get("courseName").toString());
-        course.setCourseInfo(map.get("about").toString());
-        course.setCourseTime(map.get("dates").toString());
-        course.setFormat(Integer.parseInt(map.get("format").toString()));
-        course.setAssistentId(id);
-        if(file != null) {
-            File courseIm = new File(uploadPath+"/course");
-            if (!courseIm.exists()) {
-                courseIm.mkdir();
+        if(map.get("courseName")!=null && !map.get("courseName").toString().equals("")){
+            if(!teacherRepository.existsByCourseName((map.get("courseName").toString()))){
+                Random rand = new Random();
+                CourseTeacher course = new CourseTeacher();
+//                if(teacherRepository.existsByAssistentId(id)){
+//                    course = teacherRepository.findByAssistentId(id);
+//                }
+                course.setCourseName(map.get("courseName").toString());
+                course.setCourseInfo(map.get("about").toString());
+                course.setCourseTime(map.get("dates").toString());
+                course.setFormat(Integer.parseInt(map.get("format").toString()));
+                course.setAssistentId(id);
+                if(file != null) {
+                    File courseIm = new File(coursePath);
+                    if (!courseIm.exists()) {
+                        courseIm.mkdir();
+                    }
+                    int name = rand.nextInt(10000);
+                    file.transferTo(new File(courseIm + "/" + name + "." + file.getContentType().split("/")[1]));
+                    course.setPhotoPath( name + "." + file.getContentType().split("/")[1]);
+                }
+                teacherRepository.save(course);
             }
-            int name = rand.nextInt(10000);
-            file.transferTo(new File(courseIm + "/" + name + "." + file.getContentType().split("/")[1]));
-            course.setPhotoPath(courseIm + "/" + name + "." + file.getContentType().split("/")[1]);
         }
-        teacherRepository.save(course);
+
     }
 
     public String getFileFromString(String imgBase64,String dir, String cerName){
@@ -280,7 +317,7 @@ public class AssistantService {
             library.setId(book.getId());
             library.setAuthor(book.getAuthor());
             library.setTitle(book.getBookName());
-            library.setUrl("/file/" + book.getImagePath());
+            library.setUrl("/book/" + book.getImagePath());
             list.add(library);
         }
 
@@ -291,12 +328,13 @@ public class AssistantService {
 
         List<CourseDto> courseList = new ArrayList<>();
         for(CourseTeacher course: list){
-            Assistant assistant = assistantRepository.findByUserId(course.getAssistentId());
+            Assistant assistant = assistantRepository.getOne(course.getAssistentId());
             CourseDto c = new CourseDto();
             c.setCourseId(course.getId());
             c.setAssistant(assistant.getFirstname() + " " + assistant.getLastname());
             c.setCourseName(course.getCourseName());
             c.setPathImage("/course/" + course.getPhotoPath());
+            c.setAssImage("/ava/" + assistant.getPhotoPath());
             c.setPoint(course.getPoint()==null?0:course.getPoint());
             c.setRating(course.getRating()==null?0:course.getRating());
             c.setStudentCount(courseStudentRepository.countAllByCourseId(course.getId()));
@@ -305,8 +343,9 @@ public class AssistantService {
         return courseList;
     }
     public List<CourseDto> getAllcourses(Long id){
-        List<CourseTeacher> list = teacherRepository.findAllByAssistentId(id);
         Assistant assistant = assistantRepository.findByUserId(id);
+        List<CourseTeacher> list = teacherRepository.findAllByAssistentId(assistant.getId());
+
         List<CourseDto> courseList = new ArrayList<>();
         for(CourseTeacher course: list){
             CourseDto c = new CourseDto();
@@ -316,6 +355,7 @@ public class AssistantService {
             c.setPathImage("/course/" + course.getPhotoPath());
             c.setPoint(course.getPoint()==null?0:course.getPoint());
             c.setRating(course.getRating()==null?0:course.getRating());
+            c.setAssImage("/ava/" + assistant.getPhotoPath());
             c.setStudentCount(courseStudentRepository.countAllByCourseId(course.getId()));
             courseList.add(c);
         }
@@ -336,7 +376,7 @@ public class AssistantService {
             book.setAuthor(map.get("author").toString());
         }
         if(image != null) {
-            File bookIm = new File(uploadPath+"/libs");
+            File bookIm = new File(bookPath);
             if (!bookIm.exists()) {
                 bookIm.mkdir();
             }
@@ -345,13 +385,13 @@ public class AssistantService {
             book.setImagePath(name + "." + image.getContentType().split("/")[1]);
         }
         if(file != null) {
-            File fileIm = new File(uploadPath+"/libs");
+            File fileIm = new File(bookPath);
             if (!fileIm.exists()) {
                 fileIm.mkdir();
             }
             int name =rand.nextInt(10000);
             file.transferTo(new File(fileIm + "/" + name + "." + file.getContentType().split("/")[1]));
-            book.setBookPath(fileIm + "/" + name + "." + file.getContentType().split("/")[1]);
+            book.setBookPath( name + "." + file.getContentType().split("/")[1]);
         }
         libraryRepository.save(book);
 
@@ -360,7 +400,8 @@ public class AssistantService {
     public WorkDto getWorks(Long id) {
         WorkDto workDto = new WorkDto();
         List<JobDto> jobs = new ArrayList<>();
-        for(JobMdl job: jobRepository.findAllByAssId(id)){
+        Assistant assistant = assistantRepository.findByUserId(id);
+        for(JobMdl job: jobRepository.findAllByAssId(assistant.getId())){
             JobDto jobDto = new JobDto();
             jobDto.setOrganisation(job.getOrganisation());
             jobDto.setPosition(job.getPosition());
@@ -379,14 +420,15 @@ public class AssistantService {
     }
 
     public List<CourseDto> getAllStudents(Long id) {
-        List<CourseTeacher> list = teacherRepository.findAllByAssistentId(id);
+        Assistant assistant = assistantRepository.findByUserId(id);
+        List<CourseTeacher> list = teacherRepository.findAllByAssistentId(assistant.getId());
 
         List<CourseDto> courseList = new ArrayList<>();
         for(CourseTeacher course: list){
             for(CourseStudent student: courseStudentRepository.findAllByCourseId(course.getId())){
                 CourseDto c = new CourseDto();
                 c.setCourseId(course.getId());
-                c.setPathImage("/course/" + course.getPhotoPath());
+                c.setPathImage("/ava/" +studentRepository.findByUserId(student.getStudentId()).getPhotoPath() );
                 c.setCourseName(course.getCourseName());
                 c.setAssistant(studentRepository.findByUserId(student.getStudentId()).getFirstname() + " " + studentRepository.findByUserId(student.getStudentId()).getFirstname() );
                 JSONArray array = new JSONArray(course.getCourseTime());
@@ -410,4 +452,6 @@ public class AssistantService {
         return courseList;
 
     }
+
+
 }

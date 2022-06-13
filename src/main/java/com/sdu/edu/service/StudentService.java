@@ -233,11 +233,12 @@ public class StudentService {
         return courseDto;
     }
     public List<CourseDto> getLikedAllcourses(Long id) {
+        Student student = studentRepository.findByUserId(id);
         List<CourseDto> courseList = new ArrayList<>();
-        for (StudentCourse studentCourse: studentCourseRepository.findAllByStudentId(id)){
+        for (StudentCourse studentCourse: studentCourseRepository.findAllByStudentId(student.getId())){
             if(studentCourse.isLiked()){
                 CourseTeacher course = teacherRepository.findById(studentCourse.getCourseId()).get();
-                Assistant assistant = assistantRepository.findByUserId(course.getAssistentId());
+                Assistant assistant = assistantRepository.getOne(course.getAssistentId());
                 CourseDto c = new CourseDto();
                 c.setCourseId(course.getId());
                 c.setAssistant(assistant.getFirstname() + " " + assistant.getLastname());
@@ -262,7 +263,7 @@ public class StudentService {
         List<CourseDto> courseList = new ArrayList<>();
         for (CourseStudent courseStudent: courseStudentRepository.findAllByStudentId(id)){
             CourseTeacher course = teacherRepository.findById(courseStudent.getCourseId()).get();
-            Assistant assistant = assistantRepository.findByUserId(course.getAssistentId());
+            Assistant assistant = assistantRepository.getOne(course.getAssistentId());
             CourseDto c = new CourseDto();
             c.setCourseId(course.getId());
             c.setAssistant(assistant.getFirstname() + " " + assistant.getLastname());

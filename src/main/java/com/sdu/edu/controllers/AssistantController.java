@@ -49,6 +49,13 @@ public class AssistantController {
 
         return null;
     }
+    @PostMapping("/edit/course/{id}")
+    public ResponseEntity<?> editCourse(@PathVariable(value = "id") Long id,
+                                                @RequestParam(value = "file", required = false) MultipartFile file,
+                                                @RequestParam(required = true)Map<String, Object> map) throws IOException {
+        assistantService.editCourse(id, map, file);
+        return ResponseEntity.ok(new MessageResponse("Материал успешно добавлено!"));
+    }
     @PostMapping("/add/book")
     public ResponseEntity<?> addBook(@RequestParam(value = "image", required = false) MultipartFile image,
                                        @RequestParam(value = "file", required = false) MultipartFile file,

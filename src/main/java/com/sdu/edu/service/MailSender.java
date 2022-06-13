@@ -21,7 +21,7 @@ public class MailSender {
         mailMessage.setFrom(username);
         mailMessage.setTo(emailTo);
         mailMessage.setSubject(subject);
-        mailMessage.setText("Registration code: " + message);
+        mailMessage.setText("Ваш код подтверждения: " + message  + " .  Наберите его в поле ввода.: " );
 
         mailSender.send(mailMessage);
     }

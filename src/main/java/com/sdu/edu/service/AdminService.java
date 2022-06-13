@@ -62,7 +62,7 @@ public class AdminService {
                                 adminContentDto2.setEmailID(user.getEmail());
                                 Assistant assistant = assistantRepository.findByUserId(user.getId());
                                 adminContentDto2.setName(assistant.getLastname() + " " + assistant.getFirstname());
-                                adminContentDto2.setIcon(assistant.getPhotoPath());
+                                adminContentDto2.setIcon("/ava/" + assistant.getPhotoPath());
                                 stuToAss.add(adminContentDto2);
                                 System.out.println("issss");
                             }
@@ -114,15 +114,16 @@ public class AdminService {
 
     }
     public ApplyDto getCertificate(Long id) {
+        Assistant assistant = assistantRepository.findByUserId(id);
         ApplyDto applyDto = new ApplyDto();
         List<CertificateDto> list = new ArrayList<>();
 
-        for(CertificateMdl cer: certificateRepository.findAllByAssId(id)){
+        for(CertificateMdl cer: certificateRepository.findAllByAssId(assistant.getId())){
             CertificateDto certificate = new CertificateDto();
             certificate.setId(cer.getId());
             certificate.setCompany(cer.getCerDec());
             certificate.setTitle(cer.getCerName());
-            certificate.setImage(cer.getPhotoPath());
+            certificate.setImage("/certificate/" + cer.getPhotoPath());
             list.add(certificate);
         }
         applyDto.setItems(list);
@@ -133,7 +134,8 @@ public class AdminService {
     public ApplyDto getExperience(Long id) {
         ApplyDto applyDto = new ApplyDto();
         List<ExperienceDto> list = new ArrayList<>();
-        for(JobMdl job: jobRepository.findAllByAssId(id)){
+        Assistant assistant = assistantRepository.findByUserId(id);
+        for(JobMdl job: jobRepository.findAllByAssId(assistant.getId())){
             ExperienceDto ex = new ExperienceDto();
             ex.setId(job.getId());
             String startYear = job.getStartWorkYear()==null?"":job.getStartWorkYear().toString();
@@ -156,12 +158,12 @@ public class AdminService {
         int year = LocalDate.now().getYear();
 
         PersonalDto p = new PersonalDto();
-        Assistant assistant = assistantRepository.getOne(id);
+        Assistant assistant = assistantRepository.findByUserId(id);
         String email = userRepository.getOne(assistant.getUserId()).getEmail();
         int last = Integer.parseInt(email.split("@")[0].substring(0,2));
         p.setFio(assistant.getFirstname() + " " + assistant.getLastname());
         p.setPhone(assistant.getPhone());
-        p.setImagePath(assistant.getPhotoPath());
+        p.setImagePath("/ava/" + assistant.getPhotoPath());
         p.setAbout(assistant.getAboutYou());
         p.setFaculty(assistant.getFaculty());
         p.setProf(assistant.getProfession());
