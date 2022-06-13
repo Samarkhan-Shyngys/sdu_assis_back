@@ -103,6 +103,12 @@ public class AssistantController {
         coursesDto.setCourses(assistantService.getAllcourses(id));
         return new ResponseEntity<>(coursesDto, HttpStatus.OK);
     }
+    @GetMapping("/get/students/{id}")
+    public ResponseEntity<?> getAllStudents(@PathVariable(value = "id") Long id){
+        CoursesDto coursesDto = new CoursesDto();
+        coursesDto.setCourses(assistantService.getAllStudents(id));
+        return new ResponseEntity<>(coursesDto, HttpStatus.OK);
+    }
 
     @PostMapping("/edit/profile")
     public ResponseEntity<?> editStudentProfile(@RequestParam(value = "file", required = false) MultipartFile file,

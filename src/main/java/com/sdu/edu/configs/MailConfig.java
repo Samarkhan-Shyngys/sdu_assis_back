@@ -37,14 +37,18 @@ public class MailConfig {
         mailSender.setUsername(username);
         mailSender.setPassword(password);
 
-        Properties properties = mailSender.getJavaMailProperties();
+        Properties props = mailSender.getJavaMailProperties();
 
-        properties.setProperty("mail.transport.protocol", protocol);
-        properties.setProperty("mail.debug", debug);
-        properties.setProperty("mail.smtp.auth", "true");
-        properties.setProperty("mail.smtp.ssl.enable", "true");
-        properties.setProperty("mail.smtp.socketFactory.class",
-                "javax.net.ssl.SSLSocketFactory");
+//        properties.setProperty("mail.transport.protocol", protocol);
+//        properties.setProperty("mail.debug", debug);
+//        properties.setProperty("mail.smtp.auth", "true");
+//        properties.setProperty("mail.smtp.ssl.enable", "true");
+//        properties.setProperty("mail.smtp.socketFactory.class",
+//                "javax.net.ssl.SSLSocketFactory");
+        props.put("mail.transport.protocol", "smtp");
+        props.put("mail.smtp.auth", "true");
+        props.put("mail.smtp.starttls.enable", "true");
+        props.put("mail.debug", "true");
 
         return mailSender;
     }

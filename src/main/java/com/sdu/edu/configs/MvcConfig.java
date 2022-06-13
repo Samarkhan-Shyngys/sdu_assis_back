@@ -11,14 +11,31 @@ import java.util.concurrent.TimeUnit;
 @Configuration
 public class MvcConfig implements WebMvcConfigurer {
 
-    @Value("C://Users/Shyngys/Desktop/")
+    @Value("${file.upload-path}")
     private String uploadPath;
+
+    @Value("${file.user-image}")
+    private String avaPath;
+
+    @Value("${file.upload-course}")
+    private String coursePath;
+
+    @Value("${file.upload-book}")
+    private String bookPath;
+
+    @Value("${file.upload-certificate}")
+    private String certificatePath;
+
 
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
-        registry.addResourceHandler("/file/**")
-                .addResourceLocations("file:"+uploadPath+"libs/").setCacheControl(CacheControl.maxAge(30, TimeUnit.DAYS));
+        registry.addResourceHandler("/ava/**")
+                .addResourceLocations("file:"+avaPath+"/").setCacheControl(CacheControl.maxAge(30, TimeUnit.DAYS));
         registry.addResourceHandler("/course/**")
-                .addResourceLocations("file:"+uploadPath+"course/").setCacheControl(CacheControl.maxAge(30, TimeUnit.DAYS));
+                .addResourceLocations("file:"+coursePath+"/").setCacheControl(CacheControl.maxAge(30, TimeUnit.DAYS));
+        registry.addResourceHandler("/book/**")
+                .addResourceLocations("file:"+bookPath+"/").setCacheControl(CacheControl.maxAge(30, TimeUnit.DAYS));
+        registry.addResourceHandler("/certificate/**")
+                .addResourceLocations("file:"+certificatePath+"/").setCacheControl(CacheControl.maxAge(30, TimeUnit.DAYS));
     }
 }

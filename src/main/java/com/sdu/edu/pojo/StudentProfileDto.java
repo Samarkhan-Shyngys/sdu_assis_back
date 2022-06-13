@@ -10,6 +10,7 @@ public class StudentProfileDto {
     private String phone;
     private String faculty;
     private String profession;
+    private String image;
 
 
 

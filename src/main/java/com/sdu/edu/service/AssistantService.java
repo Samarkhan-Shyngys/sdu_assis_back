@@ -19,6 +19,22 @@ public class AssistantService {
     @Value("${file.upload-path}")
     private String uploadPath;
 
+    @Value("${file.user-image}")
+    private String avaPath;
+
+    @Value("${file.upload-course}")
+    private String coursePath;
+
+    @Value("${file.upload-book}")
+    private String bookPath;
+
+    @Value("${file.upload-certificate}")
+    private String certificatePath;
+
+
+
+
+
     @Autowired
     private CourseTeacherRepository teacherRepository;
     @Autowired
@@ -33,6 +49,8 @@ public class AssistantService {
     private LibraryRepository libraryRepository;
     @Autowired
     private UserRepository userRepository;
+    @Autowired
+    private StudentRepository studentRepository;
 
 
     public void addStepper(Long id, Map<String, Object> map, MultipartFile file) throws IOException {
@@ -75,13 +93,13 @@ public class AssistantService {
         }
         assistant.setAccess(false);
         if(file != null) {
-            File assIm = new File(uploadPath+"/assistant");
+            File assIm = new File(avaPath);
             if (!assIm.exists()) {
                 assIm.mkdir();
             }
             int name = rand.nextInt(10000);
             file.transferTo(new File(assIm + "/" + name + "." + file.getContentType().split("/")[1]));
-            assistant.setPhotoPath(assIm + "/" + name + "." + file.getContentType().split("/")[1]);
+            assistant.setPhotoPath(name + "." + file.getContentType().split("/")[1]);
         }
         assistantRepository.save(assistant);
         for(int i=0; i< jobs.length(); i++){
@@ -99,7 +117,7 @@ public class AssistantService {
             if (job.get("startWorkMonth")!=null){
                 jobMdl.setStartWorkMonth(job.get("startWorkMonth").toString());
             }
-            if (job.get("endDate")!=null){
+            if (job.get("endDate")!=null && !job.get("endDate").toString().equals("")){
                 jobMdl.setEndDate((Boolean) job.get("endDate"));
                 if(!(Boolean) job.get("endDate")){
                     if (job.get("endWorkMonth")!=null){
@@ -126,8 +144,9 @@ public class AssistantService {
             if(certificateJson.get("photo")!=null){
                 int name = rand.nextInt(10000);
                 certificate.setName(String.valueOf(name));
-                certificate.setPhotoPath(uploadPath + "/certificate/");
-                getFileFromString(certificateJson.get("photo").toString(), "certificate", String.valueOf(name));
+
+                String fileName = getFileFromString(certificateJson.get("photo").toString(), certificatePath, String.valueOf(name));
+                certificate.setPhotoPath(fileName);
             }
             certificate.setAssId(assistant.getId());
             certificateRepository.save(certificate);
@@ -159,7 +178,7 @@ public class AssistantService {
         teacherRepository.save(course);
     }
 
-    public void getFileFromString(String imgBase64,String dir, String cerName){
+    public String getFileFromString(String imgBase64,String dir, String cerName){
 
         String[] strings = imgBase64.split(",");
         String extension;
@@ -177,17 +196,19 @@ public class AssistantService {
         //convert base64 string to binary data
         byte[] data = DatatypeConverter.parseBase64Binary(strings[1]);
 
-        File courseIm = new File(uploadPath+"/" + dir);
+        File courseIm = new File( dir);
         if (!courseIm.exists()) {
             courseIm.mkdir();
         }
-        String path = uploadPath +"/"+dir + "/"+cerName +"."+ extension;
+        String path = dir + "/"+cerName +"."+ extension;
         File file = new File(path);
         try (OutputStream outputStream = new BufferedOutputStream(new FileOutputStream(file))) {
             outputStream.write(data);
         } catch (IOException e) {
             e.printStackTrace();
         }
+
+        return cerName +"."+ extension;
 
     }
     public AssistantCourseDto getCourse(Long id) {
@@ -246,6 +267,7 @@ public class AssistantService {
             assistant.setProfession(assistant1.getProfession());
             assistant.setPhone(assistant1.getPhone());
             assistant.setAbout(assistant1.getAboutYou());
+            assistant.setImage("/ava/" + assistant1.getPhotoPath());
         }
         return assistant;
     }
@@ -354,5 +376,38 @@ public class AssistantService {
 
         workDto.setJobs(jobs);
         return workDto;
+    }
+
+    public List<CourseDto> getAllStudents(Long id) {
+        List<CourseTeacher> list = teacherRepository.findAllByAssistentId(id);
+
+        List<CourseDto> courseList = new ArrayList<>();
+        for(CourseTeacher course: list){
+            for(CourseStudent student: courseStudentRepository.findAllByCourseId(course.getId())){
+                CourseDto c = new CourseDto();
+                c.setCourseId(course.getId());
+                c.setPathImage("/course/" + course.getPhotoPath());
+                c.setCourseName(course.getCourseName());
+                c.setAssistant(studentRepository.findByUserId(student.getStudentId()).getFirstname() + " " + studentRepository.findByUserId(student.getStudentId()).getFirstname() );
+                JSONArray array = new JSONArray(course.getCourseTime());
+
+                List<TableTimeDto> timeDtos = new ArrayList<>();
+                for (int i=0; i<array.length(); i++){
+                    TableTimeDto tableTimeDto = new TableTimeDto();
+                    String dates = array.getJSONObject(i).get("time").toString();
+                    String t1 = dates.split("-")[0];
+                    String t2 = dates.split("-")[1];
+                    tableTimeDto.setDayStr(t1);
+                    tableTimeDto.setHourStr(t2+":00");
+                    timeDtos.add(tableTimeDto);
+
+                }
+                c.setDates(timeDtos);
+                courseList.add(c);
+            }
+
+        }
+        return courseList;
+
     }
 }

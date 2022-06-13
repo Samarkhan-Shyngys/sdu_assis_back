@@ -8,4 +8,5 @@ public class LibraryDto {
     private String title;
     private String author;
     private String url;
+    private boolean liked;
 }

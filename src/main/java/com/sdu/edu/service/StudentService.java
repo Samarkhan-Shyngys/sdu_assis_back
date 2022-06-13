@@ -1,9 +1,7 @@
 package com.sdu.edu.service;
 
 import com.sdu.edu.models.*;
-import com.sdu.edu.pojo.ApplyCourseDto;
-import com.sdu.edu.pojo.StudentProfileDto;
-import com.sdu.edu.pojo.Timetable;
+import com.sdu.edu.pojo.*;
 import com.sdu.edu.repository.*;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -16,17 +14,35 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class StudentService {
+
+
+
     @Value("${file.upload-path}")
     private String uploadPath;
+
+    @Value("${file.user-image}")
+    private String avaPath;
+
+    @Value("${file.upload-course}")
+    private String coursePath;
+
+    @Value("${file.upload-book}")
+    private String bookPath;
+
+    @Value("${file.upload-certificate}")
+    private String certificatePath;
 
     @Autowired
     private UserRepository userRepository;
 
     @Autowired
     private StudentRepository studentRepository;
+    @Autowired
+    private CourseStudentRepository courseStudentRepository;
 
     @Autowired
     private CourseTeacherRepository teacherRepository;
@@ -37,6 +53,12 @@ public class StudentService {
     private JobRepository jobRepository;
     @Autowired
     private CertificateRepository certificateRepository;
+    @Autowired
+    private StudentBookRepository bookRepository;
+    @Autowired
+    private LibraryRepository libraryRepository;
+    @Autowired
+    private StudentCourseRepository studentCourseRepository;
 
     public void editStudentProfile(MultipartFile file, StudentProfileDto stu) throws IOException {
         User user = userRepository.findByEmail(stu.getEmail());
@@ -50,7 +72,7 @@ public class StudentService {
             student.setPhone(stu.getPhone());
             student.setUserId(user.getId());
             if(file != null) {
-                File deviceFile = new File(uploadPath);
+                File deviceFile = new File(avaPath);
                 if (!deviceFile.exists()) {
                     deviceFile.mkdir();
                 }
@@ -70,7 +92,7 @@ public class StudentService {
             student.setUserId(user.getId());
 
             if(file != null) {
-                File deviceFile = new File(uploadPath);
+                File deviceFile = new File(avaPath);
                 if (!deviceFile.exists()) {
                     deviceFile.mkdir();
                 }
@@ -93,6 +115,7 @@ public class StudentService {
             student.setFaculty(stu.getFaculty());
             student.setProfession(stu.getProfession());
             student.setPhone(stu.getPhone());
+            student.setImage("/ava/" + stu.getPhotoPath());
         }
         return student;
     }
@@ -177,4 +200,144 @@ public class StudentService {
         return timetables;
 
     }
+
+    public void addCourse(Map<String, Object> map, Long id) {
+        if(map.get("userId")!=null &&  !map.get("userId").toString().equals("")){
+            Long studentId = Long.parseLong(map.get("userId").toString());
+            CourseStudent courseStudent = new CourseStudent();
+            if(courseStudentRepository.existsByCourseIdAndStudentId(id, studentId)){
+                courseStudent = courseStudentRepository.findCourseStudentByCourseIdAndStudentId(id, studentId);
+            }
+            courseStudent.setCourseId(id);
+            courseStudent.setStudentId(studentId);
+            courseStudentRepository.save(courseStudent);
+
+        }
+
+    }
+
+    public AssistantCourseDto getCourse(Long id) {
+        AssistantCourseDto courseDto = new AssistantCourseDto();
+        CourseTeacher course = teacherRepository.findByAssistentId(id);
+        courseDto.setCourseName(course.getCourseName());
+        courseDto.setFormat(course.getFormat().toString());
+        courseDto.setAbout(course.getCourseInfo());
+        JSONArray array = new JSONArray(course.getCourseTime());
+
+        List<JSONObject> jsonArray = new ArrayList<>();
+
+        System.out.println(jsonArray);
+        courseDto.setDates(jsonArray);
+        courseDto.setPhotoPath(course.getPhotoPath());
+
+        return courseDto;
+    }
+    public List<CourseDto> getLikedAllcourses(Long id) {
+        List<CourseDto> courseList = new ArrayList<>();
+        for (StudentCourse studentCourse: studentCourseRepository.findAllByStudentId(id)){
+            if(studentCourse.isLiked()){
+                CourseTeacher course = teacherRepository.findById(studentCourse.getCourseId()).get();
+                Assistant assistant = assistantRepository.findByUserId(course.getAssistentId());
+                CourseDto c = new CourseDto();
+                c.setCourseId(course.getId());
+                c.setAssistant(assistant.getFirstname() + " " + assistant.getLastname());
+                c.setCourseName(course.getCourseName());
+                c.setPathImage("/course/" + course.getPhotoPath());
+                JSONArray array = new JSONArray(course.getCourseTime());
+
+                c.setAssImage("/ava/" + assistant.getPhotoPath());
+                c.setPoint(course.getPoint()==null?0:course.getPoint());
+                c.setRating(course.getRating()==null?0:course.getRating());
+                c.setLiked(studentCourse.isLiked());
+                c.setStudentCount(courseStudentRepository.countAllByCourseId(course.getId()));
+                System.out.println(array);
+                courseList.add(c);
+            }
+
+        }
+        return courseList;
+    }
+
+    public List<CourseDto> getAllcourses(Long id) {
+        List<CourseDto> courseList = new ArrayList<>();
+        for (CourseStudent courseStudent: courseStudentRepository.findAllByStudentId(id)){
+            CourseTeacher course = teacherRepository.findById(courseStudent.getCourseId()).get();
+            Assistant assistant = assistantRepository.findByUserId(course.getAssistentId());
+            CourseDto c = new CourseDto();
+            c.setCourseId(course.getId());
+            c.setAssistant(assistant.getFirstname() + " " + assistant.getLastname());
+            c.setCourseName(course.getCourseName());
+            c.setPathImage("/course/" + course.getPhotoPath());
+            JSONArray array = new JSONArray(course.getCourseTime());
+
+            List<TableTimeDto> timeDtos = new ArrayList<>();
+            for (int i=0; i<array.length(); i++){
+                TableTimeDto tableTimeDto = new TableTimeDto();
+                String dates = array.getJSONObject(i).get("time").toString();
+               String t1 = dates.split("-")[0];
+               String t2 = dates.split("-")[1];
+               tableTimeDto.setDayStr(t1);
+               tableTimeDto.setHourStr(t2+":00");
+               timeDtos.add(tableTimeDto);
+
+            }
+            c.setAssImage("/ava/" + assistant.getPhotoPath());
+            c.setDates(timeDtos);
+            System.out.println(array);
+            courseList.add(c);
+        }
+        return courseList;
+    }
+
+    public void likeBook(Map<String, Object> map, Long id) {
+        if(map.get("liked")!=null && !map.get("liked").toString().equals("")){
+            boolean liked = Boolean.parseBoolean(map.get("liked").toString());
+            StudentBook studentBook = new StudentBook();
+            Long bookId = Long.parseLong(map.get("id").toString());
+            if(bookRepository.existsByBookIdAndStudentId(bookId, id)){
+                studentBook = bookRepository.findByBookIdAndStudentId(bookId,id);
+            }
+            studentBook.setStudentId(id);
+            studentBook.setBookId(bookId);
+            studentBook.setLiked(liked);
+            bookRepository.save(studentBook);
+        }
+    }
+    public void likeCourse(Map<String, Object> map, Long id) {
+        if(map.get("liked")!=null && !map.get("liked").toString().equals("")){
+            boolean liked = Boolean.parseBoolean(map.get("liked").toString());
+            StudentCourse studentCourse = new StudentCourse();
+            Long courseId = Long.parseLong(map.get("id").toString());
+            if(studentCourseRepository.existsByCourseIdAndStudentId(courseId, id)){
+                studentCourse = studentCourseRepository.findByCourseIdAndStudentId(courseId,id);
+            }
+            studentCourse.setStudentId(id);
+            studentCourse.setCourseId(courseId);
+            studentCourse.setLiked(liked);
+            studentCourseRepository.save(studentCourse);
+        }
+    }
+    public List<LibraryDto> getAllBooks(Long id) {
+
+        List<StudentBook> studentBooks = bookRepository.findAllByStudentId(id);
+         List<LibraryDto> list = new ArrayList<>();
+        for(StudentBook studentBook: studentBooks){
+            if(studentBook.isLiked()){
+                Library book = libraryRepository.getOne(studentBook.getBookId());
+                LibraryDto library = new LibraryDto();
+                library.setId(book.getId());
+                library.setAuthor(book.getAuthor());
+                library.setTitle(book.getBookName());
+                library.setUrl("/file/" + book.getImagePath());
+                library.setLiked(studentBook.isLiked()?true:false);
+                list.add(library);
+            }
+
+        }
+
+        return list;
+    }
+
+
+
 }

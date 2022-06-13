@@ -11,4 +11,5 @@ public class AssistantProfileDto {
     private String faculty;
     private String profession;
     private String about;
+    private String image;
 }

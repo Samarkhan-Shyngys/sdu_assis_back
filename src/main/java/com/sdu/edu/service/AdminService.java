@@ -13,9 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Service
 public class AdminService {
@@ -57,8 +55,24 @@ public class AdminService {
                         adminContentDto.setProfession(student.getProfession());
                         adminContentDto.setName(student.getLastname() + " "+student.getFirstname());
                         adminContentDto.setPhone(student.getPhone());
+                        if(assistantRepository.existsByUserId(user.getId())){
+                            if(!assistantRepository.findByUserId(user.getId()).isAccess()){
+                                AdminContentDto adminContentDto2 = new AdminContentDto();
+                                adminContentDto2.setId(user.getId());
+                                adminContentDto2.setEmailID(user.getEmail());
+                                Assistant assistant = assistantRepository.findByUserId(user.getId());
+                                adminContentDto2.setName(assistant.getLastname() + " " + assistant.getFirstname());
+                                adminContentDto2.setIcon(assistant.getPhotoPath());
+                                stuToAss.add(adminContentDto2);
+                                System.out.println("issss");
+                            }
+
+                        }
                     }
                     students.add(adminContentDto);
+
+                    adminDto.setApplied(stuToAss);
+
 
                 }
                 adminDto.setStudents(students);
@@ -75,16 +89,6 @@ public class AdminService {
                         adminContentDto.setPhone(assistant.getPhone());
                         assistants.add(adminContentDto);
                     }
-                    else{
-                        AdminContentDto adminContentDto = new AdminContentDto();
-                        adminContentDto.setId(user.getId());
-                        adminContentDto.setEmailID(user.getEmail());
-                        Assistant assistant = assistantRepository.findByUserId(user.getId());
-                        adminContentDto.setName(assistant.getLastname() + " " + assistant.getFirstname());
-                        adminContentDto.setIcon(assistant.getPhotoPath());
-                        stuToAss.add(adminContentDto);
-                    }
-                    adminDto.setApplied(stuToAss);
 
 
                 }
@@ -193,6 +197,21 @@ public class AdminService {
             Long id = Long.parseLong(map.get("id").toString());
             Assistant assistant= assistantRepository.getOne(id);
             if(apply){
+
+                User user = userRepository.getOne(assistant.getUserId());
+                if(studentRepository.existsByUserId(user.getId())){
+                    studentRepository.delete(studentRepository.findByUserId(user.getId()));
+                }
+
+
+                Role role = roleRepository.findByName(ERole.ROLE_STUDENT).get();
+                user.getRoles().remove(role);
+                Set<Role> roles = new HashSet<>();
+                Role userRole = roleRepository
+                        .findByName(ERole.ROLE_ASSISTENT)
+                        .orElseThrow(() -> new RuntimeException("Error, Role Student is not found"));
+                roles.add(userRole);
+                user.setRoles(roles);
                 assistant.setAccess(true);
                 assistantRepository.save(assistant);
             }

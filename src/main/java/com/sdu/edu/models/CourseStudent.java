@@ -33,5 +33,5 @@ public class CourseStudent {
     private Integer format;
 
     @Column(name = "student_id")
-    private Integer studentId;
+    private Long studentId;
 }
