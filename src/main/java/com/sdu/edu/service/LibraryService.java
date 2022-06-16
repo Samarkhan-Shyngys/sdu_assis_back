@@ -23,7 +23,7 @@ public class LibraryService {
             library.setId(book.getId());
             library.setAuthor(book.getAuthor());
             library.setTitle(book.getBookName());
-            library.setUrl("/file/" + book.getImagePath());
+            library.setUrl("/book/" + book.getImagePath());
             list.add(library);
         }
 

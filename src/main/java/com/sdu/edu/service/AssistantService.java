@@ -199,7 +199,8 @@ public class AssistantService {
                 course.setCourseInfo(map.get("about").toString());
                 course.setCourseTime(map.get("dates").toString());
                 course.setFormat(Integer.parseInt(map.get("format").toString()));
-                course.setAssistentId(id);
+                Assistant assistant = assistantRepository.findByUserId(id);
+                course.setAssistentId(assistant.getId());
                 if(file != null) {
                     File courseIm = new File(coursePath);
                     if (!courseIm.exists()) {

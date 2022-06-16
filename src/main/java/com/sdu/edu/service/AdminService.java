@@ -197,7 +197,7 @@ public class AdminService {
         if(map.get("func")!=null && map.get("id")!=null){
             boolean apply = Boolean.parseBoolean(map.get("func").toString());
             Long id = Long.parseLong(map.get("id").toString());
-            Assistant assistant= assistantRepository.getOne(id);
+            Assistant assistant= assistantRepository.findByUserId(id);
             if(apply){
 
                 User user = userRepository.getOne(assistant.getUserId());

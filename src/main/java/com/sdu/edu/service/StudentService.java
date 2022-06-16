@@ -234,8 +234,10 @@ public class StudentService {
     }
     public List<CourseDto> getLikedAllcourses(Long id) {
         Student student = studentRepository.findByUserId(id);
+        System.out.println("student " + student);
         List<CourseDto> courseList = new ArrayList<>();
-        for (StudentCourse studentCourse: studentCourseRepository.findAllByStudentId(student.getId())){
+        for (StudentCourse studentCourse: studentCourseRepository.findAllByStudentId(id)){
+            System.out.println(studentCourse);
             if(studentCourse.isLiked()){
                 CourseTeacher course = teacherRepository.findById(studentCourse.getCourseId()).get();
                 Assistant assistant = assistantRepository.getOne(course.getAssistentId());
@@ -329,7 +331,7 @@ public class StudentService {
                 library.setId(book.getId());
                 library.setAuthor(book.getAuthor());
                 library.setTitle(book.getBookName());
-                library.setUrl("/file/" + book.getImagePath());
+                library.setUrl("/book/" + book.getImagePath());
                 library.setLiked(studentBook.isLiked()?true:false);
                 list.add(library);
             }
